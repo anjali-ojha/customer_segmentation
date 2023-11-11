@@ -8,6 +8,7 @@ pip install snowflake-connector-python
 
 pip install snowflake-sqlalchemy
 
+
 pip install tqdm
 
 pip install nltk
