@@ -1,5 +1,26 @@
 # Customer Segmentation using Yelp Review Data
 
+
+# GIT usage
+```
+    1 -  clone the repo by using command = git clone 
+    2 -  git checkout miain
+    3 -  git pull origin main
+    4 -  git checkout -b <your_feature_branch_name>  # this will help you to keep the changes in your branch
+        --- make you code changes ---
+        once you are done
+            git add --all
+            git commit -m "message for the commit"
+            git push origin <your_feature_branch_name>
+    5 -  crate pull request from the UI.
+    6 -  Some one will review and merge it.
+    
+```
+
+
+
+
+
 ### Package Dependency
 ``` shell
 pip install sqlalchemy
