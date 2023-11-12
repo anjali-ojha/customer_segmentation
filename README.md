@@ -10,6 +10,13 @@ pip install tqdm
 pip install nltk
 pip install wordCloud
 
+pip install streamlit
+pip install watchdog
+pip install yfinance
+
+pip install snowflake-snowpark
+
+
 ```
 
 
