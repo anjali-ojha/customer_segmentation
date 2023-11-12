@@ -18,7 +18,7 @@ from operator import methodcaller
 from typing import ClassVar
 
 import streamlit as st
-from snowflake.snowpark.functions import col, max
+from snowflake.snowpark.functions import col, max, lit, array_contains, cast
 from snowflake.snowpark.session import Session
 from snowflake.snowpark.table import Table
 import math
@@ -57,7 +57,7 @@ class MyFilter:
 
         if self.widget_type is st.select_slider:
             self._df_method = "between"
-            print("here = ",  (self.session.table(MY_TABLE).select(max(col(self.table_column))).collect()[0]))
+            print("here = ",  (self.session.table(MY_TABLE).select(max(col(self.table_column))).collect()))
             self._max_value = (
                 self.session.table(MY_TABLE)
                 .select(max(col(self.table_column)))
@@ -67,8 +67,8 @@ class MyFilter:
             self._df_method = "__eq__"
 
         elif self.widget_type is st.multiselect:
-            self._df_method = "in_"
-            self._max_value = ["2015", "2016", "2017", "2018", "2022"]
+            self._df_method = "in"
+            self._max_value = "2015"
 
     @property
     def max_value(self):
@@ -112,17 +112,11 @@ class MyFilter:
         widget_kwargs = dict(label=f"{base_label} {self.widget_id}", key=self.widget_id)
         if self.widget_type is st.select_slider:
             widget_kwargs.update(
-                dict(
-                    options=list(range(math.ceil(self.max_value) + 1)),
-                    value=(0, self.max_value),
-                )
+                dict(options=list(range(math.ceil(self.max_value) + 1)),
+                     value=(0, self.max_value))
             )
         elif self.widget_type is st.multiselect:
-            widget_kwargs.update(
-                dict(
-                    options=self.max_value, default=["2022"]
-                )
-            )
+            widget_kwargs.update(dict(options=self.max_value, default=self._max_value))
 
         self.widget_type(**widget_kwargs)
 
@@ -133,9 +127,19 @@ class MyFilter:
 
         f = MyFilter(...)
         new_table = last_table[f(last_table)]"""
-        return methodcaller(self.df_method, **(self.get_filter_value()))(
-            _table[self.table_column.upper()]
-        )
+
+        print(f"calling of {self.table_column}", "-"*40)
+        print("table = ",  type(_table))
+        # print("count = ", _table, _table.where("ARRAY_TO_STRING(ELITE, ',') like '%2015%' ").count())
+        print("testing = ", type(_table.where("ARRAY_TO_STRING(ELITE, ',') like '%2015%' ")[self.table_column.upper()]))
+        # print("type = ", type(methodcaller(self.df_method, **(self.get_filter_value()))(_table[self.table_column.upper()])))
+        if self._df_method == "in":
+            print(f"{self._df_method = }")
+            return _table.where(f"ARRAY_TO_STRING({self.table_column}, ',') like '%{self.get_filter_value()}%' ")[self.table_column.upper()]
+        else:
+            return methodcaller(self.df_method, **(self.get_filter_value()))(
+                _table[self.table_column.upper()]
+            )
 
     def __getitem__(self, item):
         return getattr(self, item)

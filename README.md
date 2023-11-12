@@ -14,6 +14,7 @@ pip install streamlit
 pip install watchdog
 pip install yfinance
 
+# for this we need python 3.8+
 pip install snowflake-snowpark
 
 
