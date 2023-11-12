@@ -30,27 +30,16 @@ organization = "ESODLJG"
 account = "RU55705"
 email = "data228.project@gmail.com"
 
-snowflake_options = {
-    "sfURL": "https://fx34478.us-central1.gcp.snowflakecomputing.com",
-    "sfUser": "DATA228PROJECT",
-    "sfPassword": "Project228",
-    "sfWarehouse": "COMPUTE_WH",
-    "sfDatabase": "data_228_project",
-    "sfSchema": "yelp",
-    "sfTable": "test",
-    "dbtable": "test"
-}
-
 connection_parameters = {
     "account": "ESODLJG-RU55705",
     "user": "DATA228PROJECT",
     "password": "Project228",
-    "database": "STREAMLIT_DEMO",  # optional
-    "schema": "STREAMLIT_USER_PROFILER",  # optional
+    "database": "data_228_project",  # optional
+    "schema": "yelp",  # optional
 }
 
 
-MY_TABLE = "CUSTOMERS"
+MY_TABLE = "USERS"
 
 
 def _get_active_filters() -> filter:
@@ -70,7 +59,7 @@ def init_connection() -> Session:
     return Session.builder.configs(connection_parameters).create()
 
 
-@st.cache
+@st.cache_data
 def convert_df(df: pd.DataFrame):
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
     return df.to_csv().encode("utf-8")
@@ -83,7 +72,7 @@ def draw_sidebar():
         selected_filters = st.multiselect(
             "Select which filters to enable",
             list(_get_human_filter_names(st.session_state.filters)),
-            [],
+            list(_get_human_filter_names(st.session_state.filters))
         )
         for _f in st.session_state.filters:
             if _f.human_name in selected_filters:
@@ -119,32 +108,18 @@ def draw_main_ui(_session: Session):
                 _f(last_table)
             ]
             table_sequence += [new_table]
+            print(type(table_sequence[-1]))
+
         st.header("Dataframe preview")
 
         st.write(table_sequence[-1].sample(n=5).to_pandas().head())
 
-        # Generate the Sankey chart
-        fig = go.Figure(
-            data=[
-                go.Sankey(
-                    node=dict(
-                        pad=15,
-                        thickness=20,
-                        line=dict(color="black", width=0.5),
-                        label=mk_labels(_get_human_filter_names(_get_active_filters())),
-                    ),
-                    link=mk_links(table_sequence),
-                )
-            ]
-        )
-        st.header("Sankey chart of the applied filters")
-        st.plotly_chart(fig, use_container_width=True)
+        # add more charts here
 
         # Add the SQL statement sequence table
         statement_sequence = """
-        | number | filter name | query, transformation |
-        | ------ | ----------- | --------------------- |
-        """
+| number | filter name | query, transformation |
+| ------ | ----------- | --------------------- |"""
         st.header("Statement sequence")
         for number, (_label, _table) in enumerate(
                 zip(
@@ -176,22 +151,22 @@ if __name__ == "__main__":
     MyFilter.table_name = MY_TABLE
 
     st.session_state.filters = (
+        # MyFilter(
+        #     human_name="ELITE customer",
+        #     table_column="elite",
+        #     widget_id="elite_checkbox",
+        #     widget_type=st.multiselect,
+        # ),
         MyFilter(
-            human_name="Current customer",
-            table_column="is_current_customer",
-            widget_id="current_customer",
-            widget_type=st.checkbox,
-        ),
-        MyFilter(
-            human_name="Tenure",
-            table_column="years_tenure",
-            widget_id="tenure_slider",
+            human_name="FRIENDS_COUNT",
+            table_column="FRIENDS_COUNT",
+            widget_id="FRIENDS_COUNT_slider",
             widget_type=st.select_slider,
         ),
         MyFilter(
-            human_name="Weekly workout count",
-            table_column="average_weekly_workout_count",
-            widget_id="workouts_slider",
+            human_name="Average Stars",
+            table_column="AVERAGE_STARS",
+            widget_id="AVERAGE_STARS_slider",
             widget_type=st.select_slider,
         ),
     )

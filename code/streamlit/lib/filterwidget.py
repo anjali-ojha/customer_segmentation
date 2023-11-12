@@ -21,8 +21,9 @@ import streamlit as st
 from snowflake.snowpark.functions import col, max
 from snowflake.snowpark.session import Session
 from snowflake.snowpark.table import Table
+import math
 
-MY_TABLE = "CUSTOMERS"
+MY_TABLE = "USERS"
 
 
 @dataclass
@@ -51,11 +52,12 @@ class MyFilter:
     _df_method: str = ""
 
     def __post_init__(self):
-        if self.widget_type not in (st.select_slider, st.checkbox):
-            raise NotImplemented
+        # if self.widget_type not in (st.select_slider, st.checkbox):
+        #     raise NotImplemented
 
         if self.widget_type is st.select_slider:
             self._df_method = "between"
+            print("here = ",  (self.session.table(MY_TABLE).select(max(col(self.table_column))).collect()[0]))
             self._max_value = (
                 self.session.table(MY_TABLE)
                 .select(max(col(self.table_column)))
@@ -63,6 +65,10 @@ class MyFilter:
             )
         elif self.widget_type is st.checkbox:
             self._df_method = "__eq__"
+
+        elif self.widget_type is st.multiselect:
+            self._df_method = "in_"
+            self._max_value = ["2015", "2016", "2017", "2018", "2022"]
 
     @property
     def max_value(self):
@@ -82,6 +88,9 @@ class MyFilter:
         elif self.widget_type is st.select_slider:
             # For .between
             return dict(lower_bound=_val[0], upper_bound=_val[1])
+        elif self.widget_type is st.multiselect:
+            # For .in
+            return dict(other=_val)
         else:
             raise NotImplemented
 
@@ -93,17 +102,25 @@ class MyFilter:
 
     def create_widget(self):
         if self.widget_type is st.select_slider:
-            base_label = "Select the range of"
+            base_label = "Select range of"
         elif self.widget_type is st.checkbox:
             base_label = "Is"
+        elif self.widget_type is st.multiselect:
+            base_label = "In"
         else:
             base_label = "Choose"
         widget_kwargs = dict(label=f"{base_label} {self.widget_id}", key=self.widget_id)
         if self.widget_type is st.select_slider:
             widget_kwargs.update(
                 dict(
-                    options=list(range(self.max_value + 1)),
+                    options=list(range(math.ceil(self.max_value) + 1)),
                     value=(0, self.max_value),
+                )
+            )
+        elif self.widget_type is st.multiselect:
+            widget_kwargs.update(
+                dict(
+                    options=self.max_value, default=["2022"]
                 )
             )
 
