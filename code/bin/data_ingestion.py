@@ -53,13 +53,13 @@ class Consumer:
         df.printSchema()
         return df.withColumn("json_string", col("value").cast(StringType()))
 
-    def write(self, df_result, topicName):
+    def write(self, df_result, topic_name):
         writer = df_result \
             .writeStream.outputMode("append") \
             .format("parquet") \
-            .option("path", f"{self.output_path}/{topicName}/data") \
-            .option("checkpointLocation", f"{self.output_path}/{topicName}/checkpoint") \
-            .trigger(processingTime="5 seconds") \
+            .option("path", f"{self.output_path}/{topic_name}/data") \
+            .option("checkpointLocation", f"{self.output_path}/{topic_name}/checkpoint") \
+            .trigger(processingTime="10 seconds") \
             .start()
         writer.awaitTermination()
 
