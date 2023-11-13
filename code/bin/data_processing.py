@@ -4,8 +4,7 @@ from pyspark.sql.types import StructType, StructField, DoubleType, LongType
 from pyspark.sql.types import TimestampType
 
 from commons import *
-from sentiment import *
-from sampling import *
+from project.customer_segmentation.code.bin.data.sampling import *
 baseInputPath = baseInputPath
 sampleOutputPath = f"{baseOutputPath}/sample={sample}/"
 

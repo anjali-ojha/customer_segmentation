@@ -1,14 +1,13 @@
 from pyspark.sql import SparkSession
 import os
 
-#
 
-
-
-# Create a Spark session with the Snowflake connector JARs
 packages = ",".join([
-            "net.snowflake:spark-snowflake_2.12:2.12.0-spark_3.4",
-            "net.snowflake:snowflake-jdbc:3.14.0"])
+    "net.snowflake:spark-snowflake_2.12:2.12.0-spark_3.4",
+    "net.snowflake:snowflake-jdbc:3.14.0",
+    "org.apache.spark:spark-streaming-kafka-0-10_2.12:3.5.0",
+    "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0"
+])
 
 os.environ['PYSPARK_SUBMIT_ARGS'] = "--packages " + packages + "  pyspark-shell"
 
@@ -20,10 +19,10 @@ def init_spark():
     return SparkSession.builder \
         .appName("Project App") \
         .config("spark.driver.memory", "12g") \
-        .config("spark.jars.packages",packages) \
+        .config("spark.jars.packages", packages) \
         .getOrCreate()
 
 
 baseInputPath = "/Users/hims/Downloads/yelp_dataset/"
-baseOutputPath = "/tmp/test-1"
-sample = 0.005
+baseOutputPath = "/Users/hims/Documents/yelp_project/outputs/"
+sample = 0.001
