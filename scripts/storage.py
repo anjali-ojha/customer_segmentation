@@ -15,7 +15,7 @@ snowflake_options = {
     "sfTable": "test",
     "dbtable": "test"
 }
-
+#This dictionary stores Snowflake connection details and table information for the specified Snowflake account, user, password, warehouse, database, schema, and table, as well as the corresponding database table used in Spark.
 
 def get_engine():
     engine = create_engine(
