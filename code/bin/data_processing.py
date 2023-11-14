@@ -28,6 +28,7 @@ def process_user_data(spark):
         userDf = spark.read.parquet(f"{sampleOutputPath}/user")
         print(f"sample users ares = {userDf.count()}")
     return userDf
+    #This function processes user data in PySpark, attempting to read a Parquet file; if unsuccessful, it retrieves sampled user data, performs transformations, writes to Parquet, and finally returns the user DataFrame.
 
 
 def process_business_data(spark):
