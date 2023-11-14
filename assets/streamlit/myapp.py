@@ -16,21 +16,13 @@ limitations under the License.
 from typing import Iterable
 
 import pandas as pd
-import plotly.graph_objects as go
+import plotly.express as px
 import streamlit as st
 from snowflake.snowpark.session import Session
 from snowflake.snowpark.table import Table
 from toolz.itertoolz import pluck
-import plotly.express as px
-import matplotlib
-import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
 
-from snowflake.snowpark.functions import col, max, lit, array_contains, cast
-
-
-from lib.chart_helpers import mk_labels, mk_links
+from lib.chart_helpers import mk_labels
 from lib.filterwidget import MyFilter
 
 account_url = "https://fx34478.us-central1.gcp.snowflakecomputing.com"
