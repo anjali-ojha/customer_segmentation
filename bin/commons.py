@@ -38,6 +38,6 @@ baseOutputPath = "/Users/hims/Documents/yelp-data-segmentation/output/"
 env = "local"
 
 if env == "aws":
-    baseInputPath = "s3://yelp-data-segmentation/input/"
-    baseOutputPath = "s3://yelp-data-segmentation/output/"
+    baseInputPath = "s3a://yelp-data-segmentation/input/"
+    baseOutputPath = "s3a://yelp-data-segmentation/output/"
 

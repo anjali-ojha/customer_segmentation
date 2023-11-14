@@ -7,6 +7,7 @@ from commons import *
 from sampling import *
 from sentiment import *
 
+global sample
 
 class Consumer:
 
@@ -64,7 +65,7 @@ class Consumer:
         self.write_stream(df_result, topicName)
 
     def process_review_data_df(self, review_df, x):
-        sampled_users, is_sampled = get_sampled_users_data(spark)
+        sampled_users, is_sampled = get_sampled_users_data(spark, sample)
         if is_sampled:
             print("got sampled users ... processing that.")
             sampled_users.printSchema()
@@ -97,7 +98,7 @@ class Consumer:
         stream_df = self.read_from_topic(spark, topicName)
         df_result = stream_df.select(from_json(col("json_string"), schema).alias("data")).select("data.*")
         writer = df_result.writeStream.outputMode("append").foreachBatch(self.process_review_data_df).start()
-        writer.awaitTermination()
+        writer.awaitTermination(60)
 
 
 if __name__ == "__main__":
@@ -105,6 +106,7 @@ if __name__ == "__main__":
         server = sys.argv[1]
         topic = sys.argv[2]
         output_path = sys.argv[3]
+        sample = float(sys.argv[4])
         spark = init_spark()
         consumer = Consumer(server, output_path)
         consumer.read_reviews(spark)

@@ -7,6 +7,8 @@ from pyspark.sql.types import StringType, ArrayType, MapType
 from pyspark.sql.functions import col, udf
 
 nltk.download('vader_lexicon')
+nltk.download('stopwords')
+nltk.download('punkt')
 sia = SentimentIntensityAnalyzer()
 stop_words = set(stopwords.words('english'))
 

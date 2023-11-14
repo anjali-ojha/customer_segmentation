@@ -43,7 +43,7 @@ if __name__ == "__main__":
         print("Usage: user_attributes.py <sample>")
         exit(-1)
 
-    sample = sys.argv[1]
+    sample = float(sys.argv[1])
     sparkSession = init_spark()
     merged_df = merge_attributes(sparkSession, sample)
     save_spark_df_to_db(merged_df, "users")

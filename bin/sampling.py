@@ -1,3 +1,5 @@
+import sys
+
 from pyspark.sql.functions import col
 
 from commons import *
@@ -32,7 +34,7 @@ def get_sampled_business_data(spark, sample=0.001):
             sampled_business = spark.read.parquet(f"{sample_output_path(sample)}/sampled_business_id")
         except Exception as e:
 
-            sampled_user, _ = get_sampled_users_data(spark)
+            sampled_user, _ = get_sampled_users_data(spark, sample)
             sampled_business =  spark.read.json(f'{baseInputPath}/yelp_academic_dataset_review.json') \
                 .join(sampled_user, on = ["user_id"]) \
                 .select("business_id").distinct()
@@ -46,7 +48,8 @@ def get_sampled_business_data(spark, sample=0.001):
 
 
 if __name__ == "__main__":
+    sample = float(sys.argv[1])
     spark = init_spark()
-    get_sampled_users_data(spark)
-    get_sampled_business_data(spark)
+    get_sampled_users_data(spark, sample)
+    get_sampled_business_data(spark, sample)
     spark.stop()
