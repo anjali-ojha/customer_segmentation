@@ -1,35 +1,11 @@
-import os
 import sys
 
-from pyspark.sql import SparkSession
-from pyspark.sql.types import StructType, StructField, StringType, LongType, DoubleType, TimestampType
 from pyspark.sql.functions import from_json, col
-from commons import *
+from pyspark.sql.types import StructType, StructField, StringType, LongType, DoubleType
 
-# def init_spark():
-#     os.environ['PYSPARK_SUBMIT_ARGS'] = ",".join([
-#         '--packages org.apache.spark:spark-streaming-kafka-0-10_2.12:3.5.0',
-#         'org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0 pyspark-shell'])
-#
-#     spark = (
-#         SparkSession
-#         .builder
-#         .appName("Read Kafka")
-#         .config('spark.sql.shuffle.partitions', 4)
-#         .config('spark.default.parallelism', 4)
-#         .config('spark.jars.packages', ','.join([
-#             'org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0',
-#             'org.apache.spark:spark-streaming-kafka-0-10_2.12:3.5.0']))
-#         .config('spark.jars', ','.join([
-#             '/opt/anaconda3/lib/python3.9/site-packages/pyspark/jars/spark-sql-kafka-0-10_2.12-3.5.0.jar',
-#             '/opt/anaconda3/lib/python3.9/site-packages/pyspark/jars/spark-streaming-kafka-0-10_2.12-3.5.0.jar',
-#             '/opt/anaconda3/lib/python3.9/site-packages/pyspark/jars/kafka-clients-3.5.0.jar',
-#             '/opt/anaconda3/lib/python3.9/site-packages/pyspark/jars/spark-token-provider-kafka-0-10_2.12-3.5.0.jar',
-#             '/opt/anaconda3/lib/python3.9/site-packages/pyspark/jars/commons-pool2-2.8.0.jar']))
-#         .getOrCreate()
-#     )
-#     spark.sparkContext.setLogLevel("ERROR")
-#     return spark
+from commons import *
+from sampling import *
+from sentiment import *
 
 
 class Consumer:
@@ -39,7 +15,7 @@ class Consumer:
         self.output_path = output_path
 
     def read_from_topic(self, spark, topic):
-        print(f"reading data from the {topic = }, {server = }")
+        print(f"reading data from the topic = ", topic, "server = ", self.server)
         df = (
             spark
             .readStream
@@ -53,9 +29,10 @@ class Consumer:
         df.printSchema()
         return df.withColumn("json_string", col("value").cast(StringType()))
 
-    def write(self, df_result, topic_name):
+    def write_stream(self, df_result, topic_name):
         writer = df_result \
-            .writeStream.outputMode("append") \
+            .writeStream \
+            .outputMode("append") \
             .format("parquet") \
             .option("path", f"{self.output_path}/{topic_name}/data") \
             .option("checkpointLocation", f"{self.output_path}/{topic_name}/checkpoint") \
@@ -64,13 +41,14 @@ class Consumer:
         writer.awaitTermination()
 
     def read_checkins(self, spark):
-        stream_df = self.read_from_topic(spark, "checkins")
+        topicName = "checkins"
+        stream_df = self.read_from_topic(spark, topicName)
         schema = StructType([
             StructField("business_id", StringType(), True),
             StructField("date", StringType(), True),
         ])
         df_result = stream_df.select(from_json(col("json_string"), schema).alias("data"))
-        return df_result
+        self.write_stream(df_result, topicName)
 
     def read_tips(self, spark):
         topicName = "tips"
@@ -83,7 +61,25 @@ class Consumer:
             StructField("user_id", StringType(), True),
         ])
         df_result = stream_df.select(from_json(col("json_string"), schema).alias("data"))
-        self.write(df_result, topicName)
+        self.write_stream(df_result, topicName)
+
+    def process_review_data_df(self, review_df, x):
+        sampled_users, is_sampled = get_sampled_users_data(spark)
+        if is_sampled:
+            print("got sampled users ... processing that.")
+            sampled_users.printSchema()
+            review_df.printSchema()
+            review_df = review_df.join(sampled_users, on=["user_id"])
+
+        review_df = review_df \
+            .withColumn("date", col("date").cast("timestamp")) \
+            .withColumn("sentiment",  get_sentiment(col("text"))) \
+            .withColumn("frequent_words", tokenize_and_get_top_words(col("text")))
+
+        review_df.printSchema()
+        review_df.write.mode("append").parquet(f"{sample_output_path(sample)}/review")
+        print("sample review ares = ", review_df.count())
+        return review_df
 
     def read_reviews(self, spark):
         topicName = "reviews"
@@ -99,8 +95,9 @@ class Consumer:
             StructField("user_id", StringType(), True),
         ])
         stream_df = self.read_from_topic(spark, topicName)
-        df_result = stream_df.select(from_json(col("json_string"), schema).alias("data"))
-        self.write(df_result, topicName)
+        df_result = stream_df.select(from_json(col("json_string"), schema).alias("data")).select("data.*")
+        writer = df_result.writeStream.outputMode("append").foreachBatch(self.process_review_data_df).start()
+        writer.awaitTermination()
 
 
 if __name__ == "__main__":

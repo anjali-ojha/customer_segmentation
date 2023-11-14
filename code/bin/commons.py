@@ -13,12 +13,16 @@ packages = ",".join([
 
 os.environ['PYSPARK_SUBMIT_ARGS'] = "--packages " + packages + "  pyspark-shell"
 
-# os.environ['PYSPARK_PYTHON'] = '/opt/anaconda3/bin/python'
-# os.environ['PYSPARK_DRIVER_PYTHON'] = '/opt/anaconda3/bin/python'
+spark = None
 
 
 def init_spark():
-    return SparkSession.builder \
+    '''
+    #This function initializes a PySpark SparkSession with specific configurations,
+    including application name, driver memory, external packages, exclusion of certain
+    JARs, and S3 credentials.
+    '''
+    spark = SparkSession.builder \
         .appName("Project App") \
         .config("spark.driver.memory", "12g") \
         .config("spark.jars.packages", packages) \
@@ -26,12 +30,11 @@ def init_spark():
         .config('spark.hadoop.fs.s3a.access.key', "AKIAXYKEFI5RY2UZOUHX") \
         .config('spark.hadoop.fs.s3a.secret.key', "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") \
         .getOrCreate()
-    #This function initializes a PySpark SparkSession with specific configurations, including application name, driver memory, external packages, exclusion of certain JARs, and S3 credentials.
+    return spark
 
 
-baseInputPath = "/Users/hims/Downloads/yelp_dataset/"
-baseOutputPath = "/Users/hims/Documents/yelp_project/outputs/"
-sample = 0.001
+baseInputPath = "/Users/hims/Documents/yelp-data-segmentation/input"
+baseOutputPath = "/Users/hims/Documents/yelp-data-segmentation/output/"
 env = "local"
 
 if env == "aws":

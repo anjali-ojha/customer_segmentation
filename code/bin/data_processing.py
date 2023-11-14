@@ -5,20 +5,25 @@ from pyspark.sql.functions import split
 from pyspark.sql.types import StructType, StructField, DoubleType, LongType
 from pyspark.sql.types import TimestampType
 
-from commons import *
-from project.customer_segmentation.code.bin.data.sampling import *
+from sampling import *
+from sentiment import *
 
-sample = sample
+global sample
+
 baseInputPath = baseInputPath
-sampleOutputPath = sampleOutputPath
 
 
-def process_user_data(spark):
+def process_user_data(spark, sample):
+    '''
+    This function processes user data in PySpark, attempting to read a Parquet file;
+    if unsuccessful, it retrieves sampled user data, performs transformations, writes to Parquet,
+    and finally returns the user DataFrame.
+    '''
     try:
-        userDf = spark.read.parquet(f"{sampleOutputPath}/user")
+        userDf = spark.read.parquet(f"{sample_output_path(sample)}/user")
     except Exception as e:
 
-        sampled_users, is_sampled = get_sampled_users_data(spark)
+        sampled_users, is_sampled = get_sampled_users_data(spark, sample)
         userDf = spark.read.json(f'{baseInputPath}/yelp_academic_dataset_user.json')
         if is_sampled:
             userDf = userDf.join(sampled_users, on = ["user_id"])
@@ -28,16 +33,15 @@ def process_user_data(spark):
             .withColumn("elite", split(col("elite"), ", ")) \
             .withColumn("yelping_since", col("yelping_since").cast("timestamp"))
 
-        userDf.coalesce(1).write.mode("overwrite").parquet(f"{sampleOutputPath}/user")
-        userDf = spark.read.parquet(f"{sampleOutputPath}/user")
+        userDf.coalesce(1).write.mode("overwrite").parquet(f"{sample_output_path(sample)}/user")
+        userDf = spark.read.parquet(f"{sample_output_path(sample)}/user")
         print(f"sample users ares = {userDf.count()}")
     return userDf
-    #This function processes user data in PySpark, attempting to read a Parquet file; if unsuccessful, it retrieves sampled user data, performs transformations, writes to Parquet, and finally returns the user DataFrame.
 
 
-def process_business_data(spark):
+def process_business_data(spark, sample):
     try:
-        businessDf = spark.read.parquet(f"{sampleOutputPath}/business")
+        businessDf = spark.read.parquet(f"{sample_output_path(sample)}/business")
     except Exception as e:
 
         schema = StructType([
@@ -57,26 +61,26 @@ def process_business_data(spark):
             StructField("state", StringType(), True),
         ])
 
-        sampled_business, is_sampled = get_sampled_business_data(spark)
+        sampled_business, is_sampled = get_sampled_business_data(spark, sample)
         businessDf = spark.read.json(f'{baseInputPath}/yelp_academic_dataset_business.json', schema)
         if is_sampled:
             businessDf = businessDf.join(sampled_business, on = ["business_id"])
 
         businessDf =  businessDf \
             .withColumn("categories", split(col("categories"), ", "))
-        businessDf.write.mode("overwrite").parquet(f"{sampleOutputPath}/business")
-        businessDf = spark.read.parquet(f"{sampleOutputPath}/business")
+        businessDf.write.mode("overwrite").parquet(f"{sample_output_path(sample)}/business")
+        businessDf = spark.read.parquet(f"{sample_output_path(sample)}/business")
         print(f"sample business ares = {businessDf.count()}")
 
     return businessDf
 
 
-def process_friends_data(spark):
+def process_friends_data(spark, sample):
     try:
-        friendsDf = spark.read.parquet(f"{sampleOutputPath}/friends")
+        friendsDf = spark.read.parquet(f"{sample_output_path(sample)}/friends")
     except Exception as e:
 
-        sampled_users, is_sampled = get_sampled_users_data(spark)
+        sampled_users, is_sampled = get_sampled_users_data(spark, sample)
         friendsDf = spark.read.json(f'{baseInputPath}/yelp_academic_dataset_user.json')
         if is_sampled:
             friendsDf = friendsDf.join(sampled_users, on = ["user_id"])
@@ -84,18 +88,18 @@ def process_friends_data(spark):
         friendsDf = friendsDf.select("user_id", split(col("friends"), ", ").alias("friends"))
 
         friendsDf.printSchema()
-        friendsDf.write.mode("overwrite").parquet(f"{sampleOutputPath}/friends")
-        friendsDf = spark.read.parquet(f"{sampleOutputPath}/friends")
+        friendsDf.write.mode("overwrite").parquet(f"{sample_output_path(sample)}/friends")
+        friendsDf = spark.read.parquet(f"{sample_output_path(sample)}/friends")
         print("sample friends ares = ", friendsDf.count())
     return friendsDf
 
 
-def process_checkin_data(spark):
+def process_checkin_data(spark, sample):
     try:
-        checkinDf = spark.read.parquet(f"{sampleOutputPath}/checkin")
+        checkinDf = spark.read.parquet(f"{sample_output_path(sample)}/checkin")
     except Exception as e:
 
-        sampled_business, is_sampled = get_sampled_business_data(spark)
+        sampled_business, is_sampled = get_sampled_business_data(spark, sample)
         checkinDf = spark.read.json(f'{baseInputPath}/yelp_academic_dataset_checkin.json')
         if is_sampled:
             checkinDf = checkinDf.join(sampled_business, on = ["business_id"])
@@ -105,35 +109,37 @@ def process_checkin_data(spark):
 
         checkinDf.printSchema()
 
-        checkinDf.write.mode("overwrite").parquet(f"{sampleOutputPath}/checkin")
-        checkinDf = spark.read.parquet(f"{sampleOutputPath}/checkin")
+        checkinDf.write.mode("overwrite").parquet(f"{sample_output_path(sample)}/checkin")
+        checkinDf = spark.read.parquet(f"{sample_output_path(sample)}/checkin")
         print("sample checkin ares = ", checkinDf.count())
     return checkinDf
 
 
-def process_tip_data(spark):
+def process_tip_data(spark, sample):
     try:
-        tipDf = spark.read.parquet(f"{sampleOutputPath}/tip")
+        tipDf = spark.read.parquet(f"{sample_output_path(sample)}/tip")
     except Exception as e:
 
-        sampled_users, is_sampled = get_sampled_users_data(spark)
+        sampled_users, is_sampled = get_sampled_users_data(spark, sample)
         tipDf = spark.read.json(f'{baseInputPath}/yelp_academic_dataset_tip.json')
         if is_sampled:
             tipDf = tipDf.join(sampled_users, on = ["user_id"])
 
         tipDf = tipDf.withColumn("date", col("date").cast("timestamp"))
 
-        tipDf.write.mode("overwrite").parquet(f"{sampleOutputPath}/tip")
-        tipDf = spark.read.parquet(f"{sampleOutputPath}/tip")
+        tipDf.write.mode("overwrite").parquet(f"{sample_output_path(sample)}/tip")
+        tipDf = spark.read.parquet(f"{sample_output_path(sample)}/tip")
         print("sample tip ares = ", tipDf.count())
     return tipDf
 
 
-def process_review_data(spark):
+
+
+def process_review_data(spark, sample):
     try:
-        reviewDf = spark.read.parquet(f"{sampleOutputPath}/review")
+        reviewDf = spark.read.parquet(f"{sample_output_path(sample)}/review")
     except Exception as e:
-        sampled_users, is_sampled = get_sampled_users_data(spark)
+        sampled_users, is_sampled = get_sampled_users_data(spark, sample)
         reviewDf = spark.read.json(f'{baseInputPath}/yelp_academic_dataset_review.json')
         if is_sampled:
             reviewDf = reviewDf.join(sampled_users, on = ["user_id"])
@@ -144,27 +150,28 @@ def process_review_data(spark):
             .withColumn("frequent_words", tokenize_and_get_top_words(col("text")))
 
         reviewDf.printSchema()
-        reviewDf.write.mode("overwrite").parquet(f"{sampleOutputPath}/review")
-        reviewDf = spark.read.parquet(f"{sampleOutputPath}/review")
+        reviewDf.write.mode("overwrite").parquet(f"{sample_output_path(sample)}/review")
+        reviewDf = spark.read.parquet(f"{sample_output_path(sample)}/review")
         print("sample review ares = ", reviewDf.count())
     return reviewDf
 
 
 if __name__ == "__main__":
 
-    if len(sys.argv) == 4:
-        baseInputPath = sys.argv[1]
-        baseOutputPath = sys.argv[2]
-        sample = float(sys.argv[3])
-        baseInputPath = baseInputPath
-        sampleOutputPath = f"{baseOutputPath}/sample={sample}/"
+    if len(sys.argv) != 4:
+        print("Usage: data_processing.py <baseInputPath> <baseOutputPath> <sample>")
+        exit(-1)
+
+    baseInputPath = sys.argv[1]
+    baseOutputPath = sys.argv[2]
+    sample = float(sys.argv[3])
 
     sparkSession = init_spark()
-    user_df = process_user_data(sparkSession)
-    business_df = process_business_data(sparkSession)
-    friends_df = process_friends_data(sparkSession)
-    checkin_df = process_checkin_data(sparkSession)
-    tip_df = process_tip_data(sparkSession)
-    review_df = process_review_data(sparkSession)
+    user_df = process_user_data(sparkSession, sample)
+    business_df = process_business_data(sparkSession, sample)
+    friends_df = process_friends_data(sparkSession, sample)
+    checkin_df = process_checkin_data(sparkSession, sample)
+    tip_df = process_tip_data(sparkSession, sample)
+    review_df = process_review_data(sparkSession, sample)
 
     sparkSession.stop()

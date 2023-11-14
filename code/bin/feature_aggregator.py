@@ -1,18 +1,22 @@
+import sys
+
 from data_processing import *
 
 from attributes.users_agg import *
 from attributes.business import *
 from attributes.reviews import *
 
+from storage import *
 
-def merge_attributes(spark):
+
+def merge_attributes(spark, sample):
     # This method will aggregate all the features at a single page
-    user_df = process_user_data(spark)
-    business_df = process_business_data(spark)
-    friends_df = process_friends_data(spark)
-    checkin_df = process_checkin_data(spark)
-    tip_df = process_tip_data(spark)
-    review_df = process_review_data(spark)
+    user_df = process_user_data(spark, sample)
+    business_df = process_business_data(spark, sample)
+    friends_df = process_friends_data(spark, sample)
+    checkin_df = process_checkin_data(spark, sample)
+    tip_df = process_tip_data(spark, sample)
+    review_df = process_review_data(spark, sample)
 
     user_agg_df = get_customer_agg_value(spark, review_df)
     user_category_df = get_customer_category_counts(review_df, business_df)
@@ -30,12 +34,17 @@ def merge_attributes(spark):
     complete_user_df.printSchema()
     complete_user_df.count()
 
-    complete_user_df.write.mode("overwrite").parquet(f"{sampleOutputPath}/combined")
-    return spark.read.parquet(f"{sampleOutputPath}/combined")
+    complete_user_df.write.mode("overwrite").parquet(f"{sample_output_path(sample)}/combined")
+    return spark.read.parquet(f"{sample_output_path(sample)}/combined")
 
 
 if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Usage: user_attributes.py <sample>")
+        exit(-1)
+
+    sample = sys.argv[1]
     sparkSession = init_spark()
-    merged_df = merge_attributes(sparkSession)
-    # save_spark_df_to_db(merged_df, "users")
+    merged_df = merge_attributes(sparkSession, sample)
+    save_spark_df_to_db(merged_df, "users")
     sparkSession.stop()
