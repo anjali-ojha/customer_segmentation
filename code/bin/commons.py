@@ -38,4 +38,3 @@ if env == "aws":
     baseInputPath = "s3://yelp-data-segmentation/input/"
     baseOutputPath = "s3://yelp-data-segmentation/output/"
 
-
