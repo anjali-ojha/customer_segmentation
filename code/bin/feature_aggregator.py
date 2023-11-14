@@ -6,6 +6,7 @@ from attributes.reviews import *
 
 
 def merge_attributes(spark):
+    # This method will aggregate all the features at a sinple page
     user_df = process_user_data(spark)
     business_df = process_business_data(spark)
     friends_df = process_friends_data(spark)
