@@ -33,7 +33,7 @@ def process_user_data(spark, sample):
             .withColumn("elite", split(col("elite"), ", ")) \
             .withColumn("yelping_since", col("yelping_since").cast("timestamp"))
 
-        userDf.coalesce(1).write.mode("overwrite").parquet(f"{sample_output_path(sample)}/user")
+        userDf.repartition(1).write.mode("overwrite").parquet(f"{sample_output_path(sample)}/user")
         userDf = spark.read.parquet(f"{sample_output_path(sample)}/user")
         print(f"sample users ares = {userDf.count()}")
     return userDf
@@ -66,9 +66,9 @@ def process_business_data(spark, sample):
         if is_sampled:
             businessDf = businessDf.join(sampled_business, on = ["business_id"])
 
-        businessDf =  businessDf \
+        businessDf = businessDf \
             .withColumn("categories", split(col("categories"), ", "))
-        businessDf.write.mode("overwrite").parquet(f"{sample_output_path(sample)}/business")
+        businessDf.repartition(2).write.mode("overwrite").parquet(f"{sample_output_path(sample)}/business")
         businessDf = spark.read.parquet(f"{sample_output_path(sample)}/business")
         print(f"sample business ares = {businessDf.count()}")
 
@@ -88,7 +88,7 @@ def process_friends_data(spark, sample):
         friendsDf = friendsDf.select("user_id", split(col("friends"), ", ").alias("friends"))
 
         friendsDf.printSchema()
-        friendsDf.write.mode("overwrite").parquet(f"{sample_output_path(sample)}/friends")
+        friendsDf.repartition(2).write.mode("overwrite").parquet(f"{sample_output_path(sample)}/friends")
         friendsDf = spark.read.parquet(f"{sample_output_path(sample)}/friends")
         print("sample friends ares = ", friendsDf.count())
     return friendsDf
@@ -109,7 +109,7 @@ def process_checkin_data(spark, sample):
 
         checkinDf.printSchema()
 
-        checkinDf.write.mode("overwrite").parquet(f"{sample_output_path(sample)}/checkin")
+        checkinDf.repartition(1).write.mode("overwrite").parquet(f"{sample_output_path(sample)}/checkin")
         checkinDf = spark.read.parquet(f"{sample_output_path(sample)}/checkin")
         print("sample checkin ares = ", checkinDf.count())
     return checkinDf
@@ -127,12 +127,10 @@ def process_tip_data(spark, sample):
 
         tipDf = tipDf.withColumn("date", col("date").cast("timestamp"))
 
-        tipDf.write.mode("overwrite").parquet(f"{sample_output_path(sample)}/tip")
+        tipDf.repartition(1).write.mode("overwrite").parquet(f"{sample_output_path(sample)}/tip")
         tipDf = spark.read.parquet(f"{sample_output_path(sample)}/tip")
         print("sample tip ares = ", tipDf.count())
     return tipDf
-
-
 
 
 def process_review_data(spark, sample):
@@ -150,7 +148,7 @@ def process_review_data(spark, sample):
             .withColumn("frequent_words", tokenize_and_get_top_words(col("text")))
 
         reviewDf.printSchema()
-        reviewDf.write.mode("overwrite").parquet(f"{sample_output_path(sample)}/review")
+        reviewDf.repartition(4).write.mode("overwrite").parquet(f"{sample_output_path(sample)}/review")
         reviewDf = spark.read.parquet(f"{sample_output_path(sample)}/review")
         print("sample review ares = ", reviewDf.count())
     return reviewDf

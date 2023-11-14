@@ -34,7 +34,7 @@ def merge_attributes(spark, sample):
     complete_user_df.printSchema()
     complete_user_df.count()
 
-    complete_user_df.write.mode("overwrite").parquet(f"{sample_output_path(sample)}/combined")
+    complete_user_df.repartition(4).write.mode("overwrite").parquet(f"{sample_output_path(sample)}/combined")
     return spark.read.parquet(f"{sample_output_path(sample)}/combined")
 
 

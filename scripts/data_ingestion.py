@@ -78,7 +78,7 @@ class Consumer:
             .withColumn("frequent_words", tokenize_and_get_top_words(col("text")))
 
         review_df.printSchema()
-        review_df.write.mode("append").parquet(f"{sample_output_path(sample)}/review")
+        review_df.repartition(1).write.mode("append").parquet(f"{sample_output_path(sample)}/review")
         print("sample review ares = ", review_df.count())
         return review_df
 

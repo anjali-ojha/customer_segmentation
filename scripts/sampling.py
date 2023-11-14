@@ -20,7 +20,7 @@ def get_sampled_users_data(spark, sample=0.001):
             sampled_users = spark.read.json(f'{baseInputPath}/yelp_academic_dataset_review.json') \
                 .groupBy("user_id").count().orderBy(col("count").desc()).select("user_id").sample(sample)
 
-            sampled_users.write.mode("overwrite").parquet(f"{sample_output_path(sample)}/sampled_user_id")
+            sampled_users.repartition(1).write.mode("overwrite").parquet(f"{sample_output_path(sample)}/sampled_user_id")
             sampled_users = spark.read.parquet(f"{sample_output_path(sample)}/sampled_user_id")
             print(f"sample users ares = {sampled_users.count()}")
         return sampled_users, True
@@ -39,7 +39,7 @@ def get_sampled_business_data(spark, sample=0.001):
                 .join(sampled_user, on = ["user_id"]) \
                 .select("business_id").distinct()
 
-            sampled_business.write.mode("overwrite").parquet(f"{sample_output_path(sample)}/sampled_business_id")
+            sampled_business.repartition(1).write.mode("overwrite").parquet(f"{sample_output_path(sample)}/sampled_business_id")
             sampled_business = spark.read.parquet(f"{sample_output_path(sample)}/sampled_business_id")
             print(f"sample business ares = {sampled_business.count()}")
         return sampled_business, True
