@@ -26,6 +26,7 @@ def init_spark():
         .config('spark.hadoop.fs.s3a.access.key', "AKIAXYKEFI5RY2UZOUHX") \
         .config('spark.hadoop.fs.s3a.secret.key', "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") \
         .getOrCreate()
+    #This function initializes a PySpark SparkSession with specific configurations, including application name, driver memory, external packages, exclusion of certain JARs, and S3 credentials.
 
 
 baseInputPath = "/Users/hims/Downloads/yelp_dataset/"
