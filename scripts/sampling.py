@@ -10,6 +10,7 @@ baseInputPath = baseInputPath
 
 def sample_output_path(sample):
     return f"{baseOutputPath}/sample={sample}/"
+    #This function generates a formatted output path based on the provided sample identifier within the context of a given base output path.
 
 
 def get_sampled_users_data(spark, sample=0.001):
