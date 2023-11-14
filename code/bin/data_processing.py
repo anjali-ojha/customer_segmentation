@@ -1,3 +1,5 @@
+import sys
+
 from pyspark.sql.functions import expr
 from pyspark.sql.functions import split
 from pyspark.sql.types import StructType, StructField, DoubleType, LongType
@@ -5,8 +7,10 @@ from pyspark.sql.types import TimestampType
 
 from commons import *
 from project.customer_segmentation.code.bin.data.sampling import *
+
+sample = sample
 baseInputPath = baseInputPath
-sampleOutputPath = f"{baseOutputPath}/sample={sample}/"
+sampleOutputPath = sampleOutputPath
 
 
 def process_user_data(spark):
@@ -147,8 +151,14 @@ def process_review_data(spark):
 
 if __name__ == "__main__":
 
-    sparkSession = init_spark()
+    if len(sys.argv) == 4:
+        baseInputPath = sys.argv[1]
+        baseOutputPath = sys.argv[2]
+        sample = float(sys.argv[3])
+        baseInputPath = baseInputPath
+        sampleOutputPath = f"{baseOutputPath}/sample={sample}/"
 
+    sparkSession = init_spark()
     user_df = process_user_data(sparkSession)
     business_df = process_business_data(sparkSession)
     friends_df = process_friends_data(sparkSession)
