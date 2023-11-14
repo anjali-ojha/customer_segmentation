@@ -15,4 +15,4 @@ python3 data_ingestion.py 54.193.66.237:9092 reviews s3a://yelp-data-segmentatio
 
 ### raw_data_processing ###
 
-python3 feature_aggregator.py 0.01 > features.log 2>&1
+python3 feature_aggregator.py 0.1 > features.log 2>&1

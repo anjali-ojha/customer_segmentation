@@ -98,7 +98,7 @@ class Consumer:
         stream_df = self.read_from_topic(spark, topicName)
         df_result = stream_df.select(from_json(col("json_string"), schema).alias("data")).select("data.*")
         writer = df_result.writeStream.outputMode("append").foreachBatch(self.process_review_data_df).start()
-        writer.awaitTermination(60)
+        writer.awaitTermination(30)
 
 
 if __name__ == "__main__":
