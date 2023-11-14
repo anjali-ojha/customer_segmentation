@@ -57,7 +57,7 @@ class MyFilter:
 
         if self.widget_type is st.select_slider:
             self._df_method = "between"
-            print("here = ",  (self.session.table(MY_TABLE).select(max(col(self.table_column))).collect()))
+            # print("here = ",  (self.session.table(MY_TABLE).select(max(col(self.table_column))).collect()))
             self._max_value = (
                 self.session.table(MY_TABLE)
                 .select(max(col(self.table_column)))
@@ -128,13 +128,13 @@ class MyFilter:
         f = MyFilter(...)
         new_table = last_table[f(last_table)]"""
 
-        print(f"calling of {self.table_column}", "-"*40)
-        print("table = ",  type(_table))
-        # print("count = ", _table, _table.where("ARRAY_TO_STRING(ELITE, ',') like '%2015%' ").count())
-        print("testing = ", type(_table.where("ARRAY_TO_STRING(ELITE, ',') like '%2015%' ")[self.table_column.upper()]))
+        # print(f"calling of {self.table_column}", "-"*40)
+        # print("table = ",  type(_table))
+        # # print("count = ", _table, _table.where("ARRAY_TO_STRING(ELITE, ',') like '%2015%' ").count())
+        # print("testing = ", type(_table.where("ARRAY_TO_STRING(ELITE, ',') like '%2015%' ")[self.table_column.upper()]))
         # print("type = ", type(methodcaller(self.df_method, **(self.get_filter_value()))(_table[self.table_column.upper()])))
         if self._df_method == "in":
-            print(f"{self._df_method = }")
+            # print(f"{self._df_method = }")
             return _table.where(f"ARRAY_TO_STRING({self.table_column}, ',') like '%{self.get_filter_value()}%' ")[self.table_column.upper()]
         else:
             return methodcaller(self.df_method, **(self.get_filter_value()))(

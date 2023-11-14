@@ -21,6 +21,11 @@ import streamlit as st
 from snowflake.snowpark.session import Session
 from snowflake.snowpark.table import Table
 from toolz.itertoolz import pluck
+import plotly.express as px
+import matplotlib
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 from snowflake.snowpark.functions import col, max, lit, array_contains, cast
 
@@ -42,7 +47,7 @@ connection_parameters = {
 }
 
 
-MY_TABLE = "USERS"
+MY_TABLE = "USERS_AWS"
 
 
 def _get_active_filters() -> filter:
@@ -72,10 +77,11 @@ def draw_sidebar():
     """Should include dynamically generated filters"""
 
     with st.sidebar:
+        st.sidebar.title("Features for Segmentation")
         selected_filters = st.multiselect(
             "Select which filters to enable",
             list(_get_human_filter_names(st.session_state.filters)),
-            list(_get_human_filter_names(st.session_state.filters)),
+            []#list(_get_human_filter_names(st.session_state.filters)),
         )
         for _f in st.session_state.filters:
             if _f.human_name in selected_filters:
@@ -92,13 +98,53 @@ def draw_sidebar():
 
 
 def draw_table_data(table_sequence):
-    st.header("Dataframe preview")
+    st.header("Dataframe Preview")
     print("table_sequence = ", type(table_sequence[-1]), table_sequence[-1].dtypes)
-    table_sequence[-1].show()
-    # print(table_sequence[-1].select("elite").dtypes)
-    # a = table_sequence[-1]
-    # a["elite"] = a["elite"].astype(str)
     st.write(table_sequence[-1].sample(n=5).to_pandas().head())
+
+
+def get_popular_categories(table_sequence):
+    import json
+    from wordcloud import WordCloud
+
+    st.header("Popular Categories where People Go")
+    df = table_sequence[-1].to_pandas()
+    df['CATEGORY_MAP'] = df['CATEGORY_MAP'].apply(json.loads)
+    # print(df['CATEGORY_MAP'].tolist())
+    result_df = pd.json_normalize(df['CATEGORY_MAP']).melt(var_name='Categories', value_name='Review_Count').dropna() \
+        .groupby('Categories')['Review_Count'].sum().reset_index().nlargest(20, 'Review_Count')
+    wordcloud_data = dict(zip(result_df['Categories'], result_df['Review_Count']))
+    wordcloud = WordCloud(width=800, height=400).generate_from_frequencies(wordcloud_data)
+
+    # Display the word cloud using Streamlit
+    st.image(wordcloud.to_array(), caption="Word Cloud")
+
+
+
+def get_elite_customers(table_sequence):
+    st.header("Number of Elite Customers per Year")
+    df = table_sequence[-1].to_pandas()
+    df = df['ELITE'].str.split(",").explode().str.extract('(\d+)') \
+        .value_counts().rename_axis('elite_year').reset_index(name='number_of_users')
+    from matplotlib.pyplot import hist
+    st.markdown(hist(df.elite_year, weights=df.number_of_users))
+    st.bar_chart(df, x="elite_year", y="number_of_users")
+
+
+def emotions_distribution(table_sequence):
+    import json
+    st.header("Sentiment Analysis for the reviews")
+    df = table_sequence[-1].to_pandas()
+    df['SENTIMENT_MAP'] = df['SENTIMENT_MAP'].apply(json.loads)
+    print(df['SENTIMENT_MAP'].tolist())
+    result_df = pd.json_normalize(df['SENTIMENT_MAP']).melt(var_name='Emotion', value_name='Value_Count')
+
+    print(result_df.head())
+
+    fig = px.pie(result_df, values='Value_Count', names='Emotion', title=f'Pie Chart for Emotion of the review')
+    # Display the pie chart using Streamlit
+    st.plotly_chart(fig)
+    print(result_df.head())
 
 
 def draw_table_query_sequence(table_sequence: list):
@@ -142,16 +188,17 @@ def draw_main_ui(_session: Session):
             # First, get the last dataframe in the list
             last_table = table_sequence[-1]
             # Apply the current filter to it
-            print(_f)
 
             new_table = last_table[
                 # At this point the filter will be dynamically applied to the dataframe using the API from MyFilter
                 _f(last_table)
             ]
             table_sequence += [new_table]
-            print(type(table_sequence[-1]))
 
         draw_table_data(table_sequence)
+        get_popular_categories(table_sequence)
+        emotions_distribution(table_sequence)
+        get_elite_customers(table_sequence)
         draw_table_query_sequence(table_sequence)
 
     else:
@@ -166,7 +213,7 @@ if __name__ == "__main__":
 
     st.session_state.filters = (
         MyFilter(
-            human_name="FRIENDS_COUNT",
+            human_name="Friends Count",
             table_column="FRIENDS_COUNT",
             widget_id="FRIENDS_COUNT_slider",
             widget_type=st.select_slider,
@@ -175,6 +222,18 @@ if __name__ == "__main__":
             human_name="Average Stars",
             table_column="AVERAGE_STARS",
             widget_id="AVERAGE_STARS_slider",
+            widget_type=st.select_slider,
+        ),
+        MyFilter(
+            human_name="Review Count",
+            table_column="Review_COUNT",
+            widget_id="Review_Count_slider",
+            widget_type=st.select_slider,
+        ),
+        MyFilter(
+            human_name="Active on Yelp",
+            table_column="DATE_DIFF",
+            widget_id="Active On Yelp Days",
             widget_type=st.select_slider,
         ),
         # MyFilter(
