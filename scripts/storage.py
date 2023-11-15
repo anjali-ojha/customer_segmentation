@@ -25,7 +25,7 @@ def get_engine():
     )
     return engine
 
-
+#This function saves a Spark DataFrame to a Snowflake database table, updating the Snowflake connection options with the specified table name and then using the Snowflake DataFrame writer to overwrite the specified table.
 def save_spark_df_to_db(df, table):
     current_conf = snowflake_options
     current_conf['dbtable'] = table
