@@ -90,9 +90,26 @@ def draw_sidebar():
 
 
 def draw_table_data(table_sequence):
-    st.header("Dataframe Preview")
+    st.header("Raw Dataset")
     print("table_sequence = ", type(table_sequence[-1]), table_sequence[-1].dtypes)
     st.write(table_sequence[-1].sample(n=5).to_pandas().head())
+
+
+def get_popular_words(table_sequence):
+    import json
+    from wordcloud import WordCloud
+
+    st.header("Popular Categories where People Go")
+    df = table_sequence[-1].to_pandas()
+    df['FREQUENT_WORDS_MAP'] = df['FREQUENT_WORDS_MAP'].apply(json.loads)
+    # print(df['CATEGORY_MAP'].tolist())
+    result_df = pd.json_normalize(df['FREQUENT_WORDS_MAP']).melt(var_name='Words', value_name='Count').dropna() \
+        .groupby('Words')['Count'].sum().reset_index().nlargest(20, 'Count')
+    wordcloud_data = dict(zip(result_df['Words'], result_df['Count']))
+    wordcloud = WordCloud(width=800, height=400).generate_from_frequencies(wordcloud_data)
+
+    # Display the word cloud using Streamlit
+    st.image(wordcloud.to_array(), caption="Word Cloud")
 
 
 def get_popular_categories(table_sequence):
@@ -112,15 +129,15 @@ def get_popular_categories(table_sequence):
     st.image(wordcloud.to_array(), caption="Word Cloud")
 
 
-
 def get_elite_customers(table_sequence):
-    st.header("Number of Elite Customers per Year")
+    st.header("Number of Elite Customers per Year Distribution")
     df = table_sequence[-1].to_pandas()
     df = df['ELITE'].str.split(",").explode().str.extract('(\d+)') \
-        .value_counts().rename_axis('elite_year').reset_index(name='number_of_users')
+        .value_counts().rename_axis('Years').reset_index(name='Number of Elite Users')
+    df = df[df['Years'] != '20']
     from matplotlib.pyplot import hist
-    st.markdown(hist(df.elite_year, weights=df.number_of_users))
-    st.bar_chart(df, x="elite_year", y="number_of_users")
+    st.markdown(hist(df['Years'], weights=df['Number of Elite Users']))
+    st.bar_chart(df, x="Years", y="Number of Elite Users")
 
 
 def emotions_distribution(table_sequence):
@@ -128,11 +145,8 @@ def emotions_distribution(table_sequence):
     st.header("Sentiment Analysis for the reviews")
     df = table_sequence[-1].to_pandas()
     df['SENTIMENT_MAP'] = df['SENTIMENT_MAP'].apply(json.loads)
-    print(df['SENTIMENT_MAP'].tolist())
     result_df = pd.json_normalize(df['SENTIMENT_MAP']).melt(var_name='Emotion', value_name='Value_Count')
-
     print(result_df.head())
-
     fig = px.pie(result_df, values='Value_Count', names='Emotion', title=f'Pie Chart for Emotion of the review')
     # Display the pie chart using Streamlit
     st.plotly_chart(fig)
@@ -174,22 +188,15 @@ def draw_main_ui(_session: Session):
 
         # _f: MyFilter
         for _f in _get_active_filters():
-            # This block generates the sequence of dataframes as continually applying AND filter set by the sidebar
-            # The dataframes are to be used in the Sankey chart.
-
-            # First, get the last dataframe in the list
             last_table = table_sequence[-1]
-            # Apply the current filter to it
 
-            new_table = last_table[
-                # At this point the filter will be dynamically applied to the dataframe using the API from MyFilter
-                _f(last_table)
-            ]
+            new_table = last_table[ _f(last_table) ]
             table_sequence += [new_table]
 
         draw_table_data(table_sequence)
         get_popular_categories(table_sequence)
         emotions_distribution(table_sequence)
+        # get_popular_words(table_sequence)
         get_elite_customers(table_sequence)
         draw_table_query_sequence(table_sequence)
 
@@ -199,41 +206,42 @@ def draw_main_ui(_session: Session):
 
 if __name__ == "__main__":
     # Initialize the filters
+    st.header("Customer Segmentation With Yelp Review Dataset")
     session = init_connection()
     MyFilter.session = session
     MyFilter.table_name = MY_TABLE
 
     st.session_state.filters = (
         MyFilter(
-            human_name="Friends Count",
+            human_name="Number of Friends",
             table_column="FRIENDS_COUNT",
             widget_id="FRIENDS_COUNT_slider",
             widget_type=st.select_slider,
         ),
         MyFilter(
-            human_name="Average Stars",
+            human_name="Average Stars Given",
             table_column="AVERAGE_STARS",
             widget_id="AVERAGE_STARS_slider",
             widget_type=st.select_slider,
         ),
         MyFilter(
-            human_name="Review Count",
+            human_name="Number of Review Given",
             table_column="Review_COUNT",
             widget_id="Review_Count_slider",
             widget_type=st.select_slider,
         ),
         MyFilter(
-            human_name="Active on Yelp",
+            human_name="Active on Yelp Days",
             table_column="DATE_DIFF",
             widget_id="Active On Yelp Days",
             widget_type=st.select_slider,
         ),
-        # MyFilter(
-        #     human_name="ELITE customer",
-        #     table_column="elite",
-        #     widget_id="elite_select",
-        #     widget_type=st.multiselect,
-        # )
+        MyFilter(
+            human_name="People Find Useful",
+            table_column="USEFUL",
+            widget_id="People Find Useful",
+            widget_type=st.select_slider,
+        )
     )
 
     draw_sidebar()
