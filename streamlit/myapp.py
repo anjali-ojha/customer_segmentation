@@ -48,7 +48,7 @@ def _get_active_filters() -> filter:
 
 def _is_any_filter_enabled() -> bool:
     return any(pluck("is_enabled", st.session_state.filters))
-
+#This function checks if any filter is enabled by using the any function along with the pluck function to extract the "is_enabled" attribute from each filter in the Streamlit session state
 
 def _get_human_filter_names(_iter: Iterable) -> Iterable:
     return pluck("human_name", _iter)
