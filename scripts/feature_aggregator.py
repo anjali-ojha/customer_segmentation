@@ -18,6 +18,8 @@ def merge_attributes(spark, sample):
     tip_df = process_tip_data(spark, sample)
     review_df = process_review_data(spark, sample)
 
+    avg_catg_start_df = get_customer_category_avg_rating(review_df, business_df)
+    customer_area_df = get_customer_area(review_df, business_df)
     user_agg_df = get_customer_agg_value(spark, review_df)
     user_category_df = get_customer_category_counts(review_df, business_df)
     friends_count_df = get_friends_count(friends_df)
@@ -30,9 +32,12 @@ def merge_attributes(spark, sample):
         .join(friends_count_df, on=["user_id"]) \
         .join(sentiment_count_df, on=["user_id"]).cache() \
         .join(frequent_words_df, on=["user_id"]) \
+        .join(customer_area_df, on=["user_id"]) \
+        .join(avg_catg_start_df, on=["user_id"])
 
     complete_user_df.printSchema()
-    complete_user_df.count()
+    complete_user_df.show()
+    # complete_user_df.count()
 
     complete_user_df.repartition(4).write.mode("overwrite").parquet(f"{sample_output_path(sample)}/combined")
     return spark.read.parquet(f"{sample_output_path(sample)}/combined")
@@ -46,5 +51,5 @@ if __name__ == "__main__":
     sample = float(sys.argv[1])
     sparkSession = init_spark()
     merged_df = merge_attributes(sparkSession, sample)
-    save_spark_df_to_db(merged_df, "users")
+    save_spark_df_to_db(merged_df, "users_local")
     sparkSession.stop()
