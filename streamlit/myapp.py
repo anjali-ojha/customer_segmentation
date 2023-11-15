@@ -39,7 +39,7 @@ connection_parameters = {
 }
 
 
-MY_TABLE = "USERS_AWS"
+MY_TABLE = "USERS_LOCAL"
 
 
 def _get_active_filters() -> filter:
@@ -93,6 +93,18 @@ def draw_table_data(table_sequence):
     st.header("Raw Dataset")
     print("table_sequence = ", type(table_sequence[-1]), table_sequence[-1].dtypes)
     st.write(table_sequence[-1].sample(n=5).to_pandas().head())
+
+
+def draw_map(table_sequence):
+    # Create a map of the world
+    st.header("Geographical Distribution of the data.")
+
+    df = table_sequence[-1].to_pandas()
+    print(df.head())
+    print(df.columns)
+    mp = df[["LATITUDE", "LONGITUDE"]].dropna()
+    print(mp.head())
+    st.map(mp)
 
 
 def get_popular_words(table_sequence):
@@ -169,39 +181,41 @@ def draw_table_query_sequence(table_sequence: list):
     st.markdown(statement_sequence)
 
     # Materialize the result <=> the button was clicked
-    if st.session_state.clicked:
-        with st.spinner("Converting results..."):
-            st.download_button(
-                label="Download as CSV",
-                data=convert_df(table_sequence[-1].to_pandas()),
-                file_name="customers.csv",
-                mime="text/csv",
-            )
+    try:
+        if st.session_state.clicked:
+            with st.spinner("Converting results..."):
+                st.download_button(
+                    label="Download as CSV",
+                    data=convert_df(table_sequence[-1].to_pandas()),
+                    file_name="customers.csv",
+                    mime="text/csv",
+                )
+    except Exception as e:
+        print(e)
 
 
 def draw_main_ui(_session: Session):
     """Contains the logic and the presentation of main section of UI"""
+    customers: Table = _session.table(MY_TABLE)
+    table_sequence = [customers]
+
     if _is_any_filter_enabled():
-
-        customers: Table = _session.table(MY_TABLE)
-        table_sequence = [customers]
-
         # _f: MyFilter
         for _f in _get_active_filters():
             last_table = table_sequence[-1]
 
             new_table = last_table[ _f(last_table) ]
             table_sequence += [new_table]
-
-        draw_table_data(table_sequence)
-        get_popular_categories(table_sequence)
-        emotions_distribution(table_sequence)
-        # get_popular_words(table_sequence)
-        get_elite_customers(table_sequence)
-        draw_table_query_sequence(table_sequence)
-
     else:
         st.write("Please enable a filter in the sidebar to show transformations")
+
+    draw_table_data(table_sequence)
+    draw_map(table_sequence)
+    get_popular_categories(table_sequence)
+    emotions_distribution(table_sequence)
+    # get_popular_words(table_sequence)
+    get_elite_customers(table_sequence)
+    draw_table_query_sequence(table_sequence)
 
 
 if __name__ == "__main__":

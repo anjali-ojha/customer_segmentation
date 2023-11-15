@@ -76,8 +76,11 @@ def get_customer_area(review_df, business_df):
         .join(business_df.select("business_id", "city"), on=["business_id"]) \
         .select("user_id", "city") \
         .groupBy("user_id").agg(collect_list(col("city")).alias("city_freq")) \
-        .withColumn("user_city", home_city(col("city_freq"))) \
-        .withColumn("travel_map", traveling_city(col("city_freq"), col("user_city"))) \
-        .select("user_id", "user_city", "travel_map")
+        .withColumn("city", home_city(col("city_freq"))) \
+        .withColumn("travel_map", traveling_city(col("city_freq"), col("city"))) \
+        .select("user_id", "city", "travel_map") \
+        .join(business_df.select("city", "latitude", "longitude").dropDuplicates(["city"]), on=["city"]) \
+        .select("user_id", "city", "travel_map", "latitude", "longitude") \
+        .withColumnRenamed("city", "user_city") \
 
     return df

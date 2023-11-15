@@ -30,14 +30,14 @@ def merge_attributes(spark, sample):
         .join(user_agg_df, on=["user_id"]) \
         .join(user_category_df, on=["user_id"]) \
         .join(friends_count_df, on=["user_id"]) \
-        .join(sentiment_count_df, on=["user_id"]).cache() \
+        .join(sentiment_count_df, on=["user_id"]) \
         .join(frequent_words_df, on=["user_id"]) \
         .join(customer_area_df, on=["user_id"]) \
         .join(avg_catg_start_df, on=["user_id"])
 
     complete_user_df.printSchema()
-    complete_user_df.show()
-    # complete_user_df.count()
+    # complete_user_df.show()
+    print("total counts are = ", complete_user_df.count(), "  user counts = ", user_df.count())
 
     complete_user_df.repartition(4).write.mode("overwrite").parquet(f"{sample_output_path(sample)}/combined")
     return spark.read.parquet(f"{sample_output_path(sample)}/combined")
