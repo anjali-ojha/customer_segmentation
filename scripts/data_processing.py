@@ -74,7 +74,7 @@ def process_business_data(spark, sample):
 
     return businessDf
 
-
+#This function processes friends data in Spark, attempting to read a parquet file, and in case of an exception, retrieves sampled user data, joins it if sampled, selects relevant columns, prints the schema, writes the data to parquet, reads it again, and finally returns the resulting DataFrame.
 def process_friends_data(spark, sample):
     try:
         friendsDf = spark.read.parquet(f"{sample_output_path(sample)}/friends")
