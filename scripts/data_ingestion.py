@@ -26,7 +26,9 @@ class Consumer:
             .option("subscribe", topic)
             .load()
         )
-        print(f"is spark is reading the streams from kafka = {df.isStreaming}")
+       
+	
+	print(f"is spark is reading the streams from kafka = {df.isStreaming}")
         df.printSchema()
         return df.withColumn("json_string", col("value").cast(StringType()))
 
