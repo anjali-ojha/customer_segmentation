@@ -60,3 +60,7 @@ snowflake_options = {
     "dbtable" : "test"
 }
 ```
+
+### StreamLit App
+
+https://yelp-customer-segmentation.streamlit.app/
