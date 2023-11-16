@@ -5,6 +5,7 @@ from pyspark.sql.types import IntegerType, MapType
 from pyspark.sql.types import StringType
 
 
+
 @udf(MapType(StringType(), IntegerType()))
 def merge_maps_array(map_array):
     result = {}
@@ -12,6 +13,10 @@ def merge_maps_array(map_array):
         for k, v in m.items():
             result[k] = result.get(k, 0) + v
     return result
+
+
+
+
 
 
 def get_sentiments_count(review_df):
