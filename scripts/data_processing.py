@@ -10,7 +10,12 @@ from sentiment import *
 
 global sample
 
+
 baseInputPath = baseInputPath
+
+
+
+
 
 
 def process_user_data(spark, sample):
@@ -20,7 +25,7 @@ def process_user_data(spark, sample):
     and finally returns the user DataFrame.
     '''
     try:
-        userDf = spark.read.parquet(f"{sample_output_path(sample)}/user")
+        userDf = spark.read.parquet(f"{sample_output_path(sample)}/user") 
     except Exception as e:
 
         sampled_users, is_sampled = get_sampled_users_data(spark, sample)
