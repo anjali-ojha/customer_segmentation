@@ -39,7 +39,7 @@ connection_parameters = {
 }
 
 
-MY_TABLE = "USERS_LOCAL"
+MY_TABLE = "USERS"
 
 
 def _get_active_filters() -> filter:
