@@ -33,8 +33,8 @@ def init_spark():
     return spark
 
 
-baseInputPath = "/Users/hims/Documents/yelp-data-segmentation/input"
-baseOutputPath = "/Users/hims/Documents/yelp-data-segmentation/output/"
+baseInputPath = "/Users/anjali/Documents/yelp-data-segmentation/input"
+baseOutputPath = "/Users/anjali/Documents/yelp-data-segmentation/output/"
 env = "local"
 
 if env == "aws":
