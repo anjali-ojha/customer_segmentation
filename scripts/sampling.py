@@ -3,7 +3,6 @@ import sys
 from pyspark.sql.functions import col
 
 from commons import *
-# from sentiment import *
 
 baseInputPath = baseInputPath
 
