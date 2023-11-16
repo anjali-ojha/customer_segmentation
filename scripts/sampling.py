@@ -13,7 +13,7 @@ def sample_output_path(sample):
     #This function generates a formatted output path based on the provided sample identifier within the context of a given base output path.
 
 
-def get_sampled_users_data(spark, sample=0.001):
+def get_sampled_users_data(spark, sample):
     if sample != 1:
         try:
             sampled_users = spark.read.parquet(f"{sample_output_path(sample)}/sampled_user_id")
@@ -29,7 +29,7 @@ def get_sampled_users_data(spark, sample=0.001):
         return None, False
 
 
-def get_sampled_business_data(spark, sample=0.001):
+def get_sampled_business_data(spark, sample):
     if sample != 1:
         try:
             sampled_business = spark.read.parquet(f"{sample_output_path(sample)}/sampled_business_id")

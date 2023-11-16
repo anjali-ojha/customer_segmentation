@@ -51,5 +51,5 @@ if __name__ == "__main__":
     sample = float(sys.argv[1])
     sparkSession = init_spark()
     merged_df = merge_attributes(sparkSession, sample)
-    save_spark_df_to_db(merged_df, "users_local")
+    save_spark_df_to_db(merged_df, "users")
     sparkSession.stop()
