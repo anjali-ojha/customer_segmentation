@@ -1,9 +1,13 @@
 from sqlalchemy import create_engine
 
+
+
 account_url = "https://fx34478.us-central1.gcp.snowflakecomputing.com"
 organization = "ESODLJG"
 account = "RU55705"
 email = "data228.project@gmail.com"
+
+
 
 snowflake_options = {
     "sfURL": "https://fx34478.us-central1.gcp.snowflakecomputing.com",
