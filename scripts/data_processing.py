@@ -14,16 +14,18 @@ global sample
 baseInputPath = baseInputPath
 
 
-
-
-
-
 def process_user_data(spark, sample):
-    '''
-    This function processes user data in PySpark, attempting to read a Parquet file;
-    if unsuccessful, it retrieves sampled user data, performs transformations, writes to Parquet,
-    and finally returns the user DataFrame.
-    '''
+    """
+    This function processes user data in PySpark performs transformations,
+    writes to Parquet, and finally returns the user DataFrame.
+    It uses caching by checking if the parquet file exists.
+
+    if sampling is defined, it will join the sampled users with the user data, to speed up the process.
+
+    It will read all the users data registered in the yelp platform and do the required transformations like
+        - converting the yelping_since column to timestamp
+        - making the elite column as array
+    """
     try:
         userDf = spark.read.parquet(f"{sample_output_path(sample)}/user") 
     except Exception as e:
@@ -45,6 +47,18 @@ def process_user_data(spark, sample):
 
 
 def process_business_data(spark, sample):
+    """
+    This function processes user data in PySpark performs transformations,
+    writes to Parquet, and finally returns the business DataFrame.
+    It uses caching by checking if the parquet file exists.
+
+    it will do the following transformations:
+        - convert the categories column to array (this will help us to do the aggregation on the categories)
+        - convert the hours column to map
+        - convert the attributes column to map
+        - etc.
+
+    """
     try:
         businessDf = spark.read.parquet(f"{sample_output_path(sample)}/business")
     except Exception as e:
@@ -79,8 +93,14 @@ def process_business_data(spark, sample):
 
     return businessDf
 
-#This function processes friends data in Spark, attempting to read a parquet file, and in case of an exception, retrieves sampled user data, joins it if sampled, selects relevant columns, prints the schema, writes the data to parquet, reads it again, and finally returns the resulting DataFrame.
+
 def process_friends_data(spark, sample):
+    """
+    This function processes friends data in Spark, attempting to read a parquet file,
+    and in case of an exception, retrieves sampled user data, joins it if sampled, selects
+    relevant columns, prints the schema, writes the data to parquet, reads it again, and finally
+    returns the resulting DataFrame.
+    """
     try:
         friendsDf = spark.read.parquet(f"{sample_output_path(sample)}/friends")
     except Exception as e:
@@ -100,6 +120,10 @@ def process_friends_data(spark, sample):
 
 
 def process_checkin_data(spark, sample):
+    """
+    these are one time historical data load, so system will have some initial data, and later it
+    will come as stream.
+    """
     try:
         checkinDf = spark.read.parquet(f"{sample_output_path(sample)}/checkin")
     except Exception as e:
@@ -121,6 +145,10 @@ def process_checkin_data(spark, sample):
 
 
 def process_tip_data(spark, sample):
+    """
+    these are one time historical data load, so system will have some initial data, and later it
+    will come as stream.
+    """
     try:
         tipDf = spark.read.parquet(f"{sample_output_path(sample)}/tip")
     except Exception as e:
@@ -139,6 +167,10 @@ def process_tip_data(spark, sample):
 
 
 def process_review_data(spark, sample):
+    """
+    these are one time historical data load, so system will have some initial data, and later it
+    will come as stream.
+    """
     try:
         reviewDf = spark.read.parquet(f"{sample_output_path(sample)}/review")
     except Exception as e:
@@ -161,6 +193,8 @@ def process_review_data(spark, sample):
 
 if __name__ == "__main__":
 
+    # this is the main function for data processing.
+    #
     if len(sys.argv) != 4:
         print("Usage: data_processing.py <baseInputPath> <baseOutputPath> <sample>")
         exit(-1)

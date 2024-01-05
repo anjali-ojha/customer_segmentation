@@ -9,6 +9,18 @@ from pyspark.sql.types import StringType
 
 @udf(MapType(StringType(), IntegerType()))
 def merge_maps_array(map_array):
+    """
+    Its an UDF to merge the maps in the array.
+    It will help tp bring a generalize format of the data and will make then earlier to process.
+
+    Input data will be
+        [{"Active Life": 1, "Arts & Entertainment": 1,
+        "Automotive": 1, "Beauty & Spas": 1, "Education": 1}]
+    Output data will be
+        {"Active Life": 1, "Arts & Entertainment": 1,
+        "Automotive": 1, "Beauty & Spas": 1, "Education": 1}
+
+    """
     result = {}
     for m in map_array:
         for k, v in m.items():
@@ -17,6 +29,14 @@ def merge_maps_array(map_array):
 
 
 def get_customer_category_counts(review_df, business_df):
+    """
+     - This method will get the customer category counts.
+     - customer category count will be the count of the categories that the customer has visited.
+        its important to capture the categories that the customer has visited,
+        as it will help us to understand the customer's interest in the business.
+     - number of categories will be the size of the map.
+
+    """
     df = review_df.select("user_id", "business_id") \
         .join(business_df.select("business_id", "categories"), on=["business_id"]) \
         .select("user_id", explode("categories").alias("category")) \
@@ -31,6 +51,9 @@ def get_customer_category_counts(review_df, business_df):
 
 @udf(MapType(StringType(), FloatType()))
 def merge_maps_array_float(map_array):
+    """
+    Its an UDF to merge the maps in the array.
+    """
     result = {}
     for m in map_array:
         for k, v in m.items():
@@ -39,6 +62,12 @@ def merge_maps_array_float(map_array):
 
 
 def get_customer_category_avg_rating(review_df, business_df):
+    """
+    - This method will get the customer category avg rating.
+    - customer category avg rating will be the avg of the ratings that the customer
+    has given to the business.
+    - number of categories will be the size of the map.
+    """
     df = review_df.select("user_id", "business_id", "stars") \
         .filter(col("stars").isNotNull()) \
         .join(business_df.select("business_id", "categories"), on=["business_id"]) \
@@ -54,6 +83,10 @@ def get_customer_category_avg_rating(review_df, business_df):
 
 @udf(StringType())
 def home_city(items):
+    """
+    This method will get the home city of the customer.
+    It uses the location frequency where customer uses services and pick the most frequent city.
+    """
     if items is None:
         return None
     return max(items, key=lambda x: items.count(x))
@@ -61,6 +94,10 @@ def home_city(items):
 
 @udf(MapType(StringType(), IntegerType()))
 def traveling_city(items, home):
+    """
+    This method will get the traveling map.
+    Traveling map will be the map of the cities that the customer has visited.
+    """
     if items is None:
         return None
     travel_map = {}
@@ -72,6 +109,10 @@ def traveling_city(items, home):
 
 
 def get_customer_area(review_df, business_df):
+    """
+    this method will get the customer geographical area data with latitude and longitude.
+    it also captures the home city and the other traveling cities and how frequently user visits them
+    """
     df = review_df.select("user_id", "business_id") \
         .join(business_df.select("business_id", "city"), on=["business_id"]) \
         .select("user_id", "city") \

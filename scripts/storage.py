@@ -19,7 +19,10 @@ snowflake_options = {
     "sfTable": "test",
     "dbtable": "test"
 }
-#This dictionary stores Snowflake connection details and table information for the specified Snowflake account, user, password, warehouse, database, schema, and table, as well as the corresponding database table used in Spark.
+
+# This dictionary stores Snowflake connection details and table information for the specified Snowflake
+# account, user, password, warehouse, database, schema, and table, as well as the corresponding
+# database table used in Spark.
 
 def get_engine():
     engine = create_engine(
@@ -29,8 +32,13 @@ def get_engine():
     )
     return engine
 
-#This function saves a Spark DataFrame to a Snowflake database table, updating the Snowflake connection options with the specified table name and then using the Snowflake DataFrame writer to overwrite the specified table.
+
 def save_spark_df_to_db(df, table):
+    """
+    This function saves a Spark DataFrame to a Snowflake database table, updating the Snowflake
+    connection options with the specified table name and then using the Snowflake DataFrame
+    writer to overwrite the specified table.
+    """
     current_conf = snowflake_options
     current_conf['dbtable'] = table
     current_conf['sfTable'] = table

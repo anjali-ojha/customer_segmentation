@@ -10,7 +10,11 @@ from storage import *
 
 
 def merge_attributes(spark, sample):
-    # This method will aggregate all the features at a single page
+    """
+    This method will merge all the attributes of the user.
+    it will merge all the attributes of the user and will create a single dataframe.
+    it will be used to create the customer profile and for our use case customer is the key
+    """
     user_df = process_user_data(spark, sample)
     business_df = process_business_data(spark, sample)
     friends_df = process_friends_data(spark, sample)
@@ -53,3 +57,13 @@ if __name__ == "__main__":
     merged_df = merge_attributes(sparkSession, sample)
     save_spark_df_to_db(merged_df, "users")
     sparkSession.stop()
+
+
+cd ~/scripts
+
+
+python3 kafka/producer.py localhost:9092 reviews /home/ubuntu/yelp_academic_dataset_review_test.json 500
+
+python3 data_ingestion.py localhost:9092 reviews s3a://yelp-data-segmentation/output/ 0.001
+
+python3 feature_aggregator.py 0.001

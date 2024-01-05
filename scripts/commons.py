@@ -1,6 +1,10 @@
 from pyspark.sql import SparkSession
 import os
 
+# This is a common class having all the common variables and functions.
+# This class is used by all the other classes.
+# This class is also used to initialize the spark session with the required packages.
+# it will have all the base paths (for input and output) and environment variables.
 
 packages = ",".join([
     "net.snowflake:spark-snowflake_2.12:2.12.0-spark_3.4",
